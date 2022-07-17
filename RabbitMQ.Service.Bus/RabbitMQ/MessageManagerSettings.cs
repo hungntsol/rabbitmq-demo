@@ -9,6 +9,8 @@ public class MessageManagerSettings
 	public string ExchangeName { get; set; } = null!;
 	// public string ExchangeType { get; set; } = Client.ExchangeType.Direct;
 	public ushort QueuePrefetch { get; set; }
+	
+	public int RetryCount { get; set; }
 	public JsonSerializerOptions JsonSerializerOptions { get; set; } = JsonOptions.Default;
 }
 

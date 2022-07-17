@@ -18,7 +18,11 @@ public class QueueListener<T> : BackgroundService where T : IntegrationEventBase
 	private readonly IServiceProvider _serviceProvider;
 	private readonly string _queueName;
 
-	public QueueListener(IMessagePublisher messagePublisher, MessageManagerSettings messageManagerSettings, ILogger<QueueListener<T>> logger, IServiceProvider serviceProvider, QueueSettings queueSettings)
+	public QueueListener(IMessagePublisher messagePublisher, 
+		MessageManagerSettings messageManagerSettings,
+		ILogger<QueueListener<T>> logger, 
+		IServiceProvider serviceProvider, 
+		QueueSettings queueSettings)
 	{
 		_messagePublisher = messagePublisher;
 		_messageManagerSettings = messageManagerSettings;
@@ -80,7 +84,7 @@ public class QueueListener<T> : BackgroundService where T : IntegrationEventBase
 	public override Task StopAsync(CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("RabbitMQ listener stopped for {QueueName}", _queueName);
-		
+
 		return base.StopAsync(cancellationToken);
 	}
 }

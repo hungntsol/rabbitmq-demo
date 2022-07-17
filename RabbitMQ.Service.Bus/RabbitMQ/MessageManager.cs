@@ -4,23 +4,28 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Service.Bus.Abstractions;
 using RabbitMQ.Service.Bus.Events;
+using RabbitMQ.Service.Bus.RabbitMQ.Persistence;
 
 namespace RabbitMQ.Service.Bus.RabbitMQ;
 
-public class MessageManager : IMessagePublisher, IDisposable
+public class MessageManager : IMessagePublisher
 {
 	private const string MAX_PRIORITY_HEADER = "x-max-priority";
 
-	internal IConnection Connection { get; private set; }
-	internal IModel Channel { get; private set; }
+	private readonly IRabbitMQPersistenceConnection _rabbitMQPersistenceConnection;
+
+	private IConnection Connection { get; set; }
+	private IModel Channel { get; set; }
 
 	private readonly MessageManagerSettings _messageManagerSettings;
 	private readonly QueueSettings _queueSettings;
 
-	public MessageManager(MessageManagerSettings messageManagerSettings, QueueSettings queueSettings)
+	public MessageManager(MessageManagerSettings messageManagerSettings, QueueSettings queueSettings, IRabbitMQPersistenceConnection rabbitMQPersistenceConnection)
 	{
 		_messageManagerSettings = messageManagerSettings;
 		_queueSettings = queueSettings;
+		_rabbitMQPersistenceConnection = rabbitMQPersistenceConnection;
+		
 
 		InitiateConnection();
 		DeclareChannelExchange(messageManagerSettings);
@@ -45,26 +50,18 @@ public class MessageManager : IMessagePublisher, IDisposable
 	public void MarkAsComplete(BasicDeliverEventArgs message) => Channel.BasicAck(message.DeliveryTag, false);
 	public void MarkAsRejected(BasicDeliverEventArgs message) => Channel.BasicReject(message.DeliveryTag, false);
 	
-	public void Dispose()
-	{
-		if (Channel.IsOpen)
-		{
-			Channel.Close();
-		}
-
-		if (Connection.IsOpen)
-		{
-			Connection.Close();
-		}
-		
-		GC.SuppressFinalize(this);
-	}
 	
 	private void InitiateConnection()
 	{
-		var connectionFactory = new ConnectionFactory() { Uri = new Uri(_messageManagerSettings.HostAddress) };
-		Connection = connectionFactory.CreateConnection();
-		Channel = Connection.CreateModel();
+		// var connectionFactory = new ConnectionFactory() { Uri = new Uri(_messageManagerSettings.HostAddress) };
+
+		// if (!_rabbitMQPersistenceConnection.IsConnected)
+		// {
+		// 	_rabbitMQPersistenceConnection.RetryConnect();
+		// }
+		
+		Connection = _rabbitMQPersistenceConnection.Connection!;
+		Channel = _rabbitMQPersistenceConnection.CreateChannel();
 	}
 
 	private void DeclareChannelExchange(MessageManagerSettings messageManagerSettings)

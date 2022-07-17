@@ -35,9 +35,11 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 {
 	services.AddRabbitMQ(settings =>
 			{
-				settings.HostAddress = configuration.GetValue<string>("RabbitMQ:HostAddress");
-				settings.ExchangeName = configuration.GetValue<string>("RabbitMQ:ExchangeName");
-				settings.QueuePrefetch = configuration.GetValue<ushort>("RabbitMQ:QueuePrefetch");
+				var section = configuration.GetSection("RabbitMQ");
+				settings.HostAddress = section.GetValue<string>("HostAddress");
+				settings.ExchangeName = section.GetValue<string>("ExchangeName");
+				settings.QueuePrefetch = section.GetValue<ushort>("QueuePrefetch");
+				settings.RetryCount = section.GetValue<int>("RetryCount");
 			},
 			queues =>
 			{
